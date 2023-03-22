@@ -3,7 +3,7 @@
 > **Abstract**
 Large-scale pre-trained language models (PLMs) such as BERT have recently achieved great success and become a milestone in natural language processing (NLP). It is now the consensus of the NLP community to adopt PLMs as the backbone for downstream tasks. In recent works on knowledge graph question answering (KGQA), BERT or its variants have become necessary in their KGQA models. However, there is still a lack of comprehensive research and comparison of the performance of different PLMs in KGQA. To this end, we summarize two basic KGQA frameworks based on PLMs without additional neural network modules to compare the performance of nine PLMs in terms of accuracy and efficiency. In addition, we present three benchmarks for larger-scale KGs based on the popular SimpleQuestions benchmark to investigate the scalability of PLMs. We carefully analyze the results of all PLMs-based KGQA basic frameworks on these benchmarks and two other popular datasets, WebQuestionSP and FreebaseQA, and find that knowledge distillation techniques and knowledge enhancement methods in PLMs are promising for KGQA. Furthermore, we test ChatGPT, which has drawn a great deal of attention in the NLP community, demonstrating its impressive capabilities and limitations in zero-shot KGQA. We have released the code and benchmarks to promote the use of PLMs on KGQA.
 
-This is the accompanying code & benchmarks for the paper "[An Empirical Study of Pre-trained Language Models in Simple Knowledge Graph Question Answering](null)"
+This is the accompanying code & benchmarks for the paper "[An Empirical Study of Pre-trained Language Models in Simple Knowledge Graph Question Answering](https://arxiv.org/abs/2303.10368)", which has been accept by World Wide Web Journal.
 
 ## Requirements
 Please install the following dependency libraries.
@@ -55,6 +55,7 @@ Please download the related caches before running the code.
 Downloading indexes and datas to folders ```indexes mydata mydata1```. https://drive.google.com/drive/folders/1nJCRoOmkQygrkOIzUnYi87N42RVI_HtS?usp=sharing
 
 Downloading KGs to folders ```kb_105M kb_202M```. https://drive.google.com/drive/folders/1FMfPYe_BfrlE5psYM7yB8E3iD0ZjGSwH?usp=sharing
+Downloading the large scale KG from https://www.aliyundrive.com/s/8G6dPr3Z77r
 
 Downloading PLMs caches to ```pretrain```: [BERT](https://huggingface.co/bert-base-uncased), [RoBERTa](https://huggingface.co/roberta-base), [XLNET](https://huggingface.co/xlnet-base-cased), [GPT2](https://huggingface.co/gpt2), [ALBERT](https://huggingface.co/albert-base-v2), [DistilBERT](https://huggingface.co/distilbert-base-uncased), [DistilRoBERTa](https://huggingface.co/distilroberta-base), [LUKE](https://huggingface.co/studio-ousia/luke-base), [KEPLER](https://github.com/THU-KEG/KEPLER)
 
