@@ -96,5 +96,10 @@ Same procedure as classification-based KGQA framework, you can use the results d
 #### 4. Evidence integration
 Run ```final.py``` to evaluate the result
 
+
+## Code for ChatGPT API
+
+We have uploaded the our [code](tool/ChatGPT_API.py) for using ChatGPT to collect answers to questions in datasets. The code uses the official OpenAI's API . If you want to learn more about APl, see OpenAI's official website for more information: https://platform.openai.com/docs/guides/chat.
+
 ## Contact
 Please consider creating a new issue. We will respond to your questions within a few days.
