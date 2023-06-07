@@ -25,13 +25,14 @@ PLMs-in-Practical-KBQA/main/
 ├─ entity_detection/: Entity Detection
     ├─ ner.py: Training and inferencing PLMS-based NER, except GPT2
     ├─ train.py: Training and inferencing GPT2-based NER
-    ├─  ner_label.py: Generating labels for similarity-based relation prediction
+    ├─ ner_label.py: Generating labels for similarity-based relation prediction
 ├─ entity_linking/: Entity Disambiguation based on Vanilla method
     ├─ entity_linking.py: Disambiguat entity using vanilla method. 
 ├─ entity_disamb/: PLMs-based Entity Disambiguation. Before running the PLMS-based ED model, you need to run entity_linking.py
-    ├─ candidate_convert.py: Step 1. Preprocessing the output of entity_linking.py
-    ├─ run_disamb.py: Step 2. Training and inferencing PLMS-based ED. 
-    ├─ result_convert.py: Step3. Evaluating PLMS-based ED results.
+    ├─ data_convert.py: Step 1. Converting the form of original dataset
+    ├─ candidate_convert.py: Step 2. Preprocessing the output of entity_linking.py
+    ├─ run_disamb.py: Step 3. Training and inferencing PLMS-based ED. 
+    ├─ result_convert.py: Step 4. Evaluating PLMS-based ED results.
 ├─ rel_prediction/: Classfication-based relation prediction
     ├─ classify.py: Training
     ├─ test_re.py: Testing
@@ -54,10 +55,12 @@ PLMs-in-Practical-KBQA/main/
 ## Usage
 Please download the related caches before running the code.
 
-Downloading indexes and datas to folders ```indexes mydata mydata1```. https://drive.google.com/drive/folders/1nJCRoOmkQygrkOIzUnYi87N42RVI_HtS?usp=sharing
+Downloading indexes and datas to folders ```indexes mydata mydata1```. https://pan.baidu.com/s/1xpJnGTPnjRXqutK5m_Biiw?pwd=g9op
+Downloading indexes for ```kb_105 kb_202M```. https://pan.baidu.com/s/17C1AwWqUmWU4PYUZt-0LzA?pwd=0tpm
+Downloading indexes for ```entity_disamb```. https://pan.baidu.com/s/155LUfVYca2UMXAyhBsfUuA?pwd=bdzs
 
 Downloading KGs to folders ```kb_105M kb_202M```. https://drive.google.com/drive/folders/1FMfPYe_BfrlE5psYM7yB8E3iD0ZjGSwH?usp=sharing
-Downloading the large scale KG from https://www.aliyundrive.com/s/8G6dPr3Z77r
+Downloading the large scale KG from https://pan.baidu.com/s/1Osm47PFf97eiROPiCB3pXA?pwd=kspe
 
 Downloading PLMs caches to ```pretrain```: [BERT](https://huggingface.co/bert-base-uncased), [RoBERTa](https://huggingface.co/roberta-base), [XLNET](https://huggingface.co/xlnet-base-cased), [GPT2](https://huggingface.co/gpt2), [ALBERT](https://huggingface.co/albert-base-v2), [DistilBERT](https://huggingface.co/distilbert-base-uncased), [DistilRoBERTa](https://huggingface.co/distilroberta-base), [LUKE](https://huggingface.co/studio-ousia/luke-base), [KEPLER](https://github.com/THU-KEG/KEPLER)
 
@@ -76,9 +79,10 @@ If you want to implement KGQA_CL framework, please follow these steps.
 (3) For GPT2, run ```train.py``` in entity_detection folder to train ner; for other models, run ```ner.py```
 #### 2. Entity linking
 (1) Run ```entity_linking.py``` to generate candidate entities  
-(2) Run ```candidate_convert.py``` to preprocess the output of entity_linking.py  
-(3) Run ```run_disamb.py``` to train and inference entity disambiguation  
-(4) Run ```result_convert.py``` to evaluate entity disambiguation results
+(2) Run ```data_convert.py``` to convert the form of original dataset  
+(3) Run ```candidate_convert.py``` to preprocess the output of entity_linking.py  
+(4) Run ```run_disamb.py``` to train and inference entity disambiguation  
+(5) Run ```result_convert.py``` to evaluate entity disambiguation results
 #### 3. Relation prediction
 (1) Run ```classify.py``` to train  
 (2) Run ```test_re.py``` to test  
