@@ -14,13 +14,20 @@ import numpy as np
 from transformers import (
     AutoTokenizer,
     AutoConfig,
+    RobertaConfig,
+    RobertaTokenizer,
 )
-from models.BertRanker import BertForCandidateRanking
-from models.RobertaRanker import RobertaForCandidateRanking
+
+from .model import CandidateRanking,DistilbertRanking,XlnetRanking,GPT2Ranking,KEPLERRanking
+
+
+from .models.BertRanker import BertForCandidateRanking
+from .models.RobertaRanker import RobertaForCandidateRanking
 MODEL_TYPE_DICT = {
     'bert': BertForCandidateRanking,
     'roberta': RobertaForCandidateRanking,
 }
+
 
 def set_seed(args):
     random.seed(args.seed)
@@ -35,53 +42,56 @@ def to_list(tensor):
 
 def register_args(parser):
     # Required parameters
+    parser.add_argument("--patience", default=3)
     parser.add_argument(
         "--dataset",
-        default=None,
+        default='SQ',
         type=str,
-        required=True,
         help="dataset to operate on",
     )
     parser.add_argument(
         "--model_type",
-        default=None,
+        default='bert',
         type=str,
-        required=True,
         help="Model type",
     )
     parser.add_argument(
         "--model_name_or_path",
-        default=None,
+        default='pretrain/bert-base-uncased',
         type=str,
-        required=True,
         help="Path to pretrained model or model identifier from huggingface.co/models",
     )
     parser.add_argument(
         "--output_dir",
-        default=None,
+        default='result',
         type=str,
-        required=True,
-        help="The output directory where the model checkpoints and predictions will be written.",
+        help="The output directory where the predictions will be written.",
+    )
+    parser.add_argument(
+        "--checkpoint_dir",
+        default='checkpoint',
+        type=str,
+        help="The output directory where the model checkpoints will be written.",
     )
 
     # Other parameters
     parser.add_argument(
         "--data_dir",
-        default=None,
+        default='data',
         type=str,
         help="The input data dir. Should contain the .json files for the task."
         + "If no data dir or train/predict files are specified, will run with tensorflow_datasets.",
     )
     parser.add_argument(
         "--train_file",
-        default=None,
+        default='data/bert-base-uncased/train_candidate.json',
         type=str,
         help="The input training file. If a data dir is specified, will look for the file there"
         + "If no data dir or train/predict files are specified, will run with tensorflow_datasets.",
     )
     parser.add_argument(
         "--predict_file",
-        default=None,
+        default='data/bert-base-uncased/valid_candidate.json',
         type=str,
         help="The input evaluation file. If a data dir is specified, will look for the file there"
         + "If no data dir or train/predict files are specified, will run with tensorflow_datasets.",
@@ -109,32 +119,32 @@ def register_args(parser):
         help="The maximum total input sequence length after WordPiece tokenization. Sequences "
         "longer than this will be truncated, and sequences shorter than this will be padded.",
     )
-    parser.add_argument("--do_train", action="store_true", help="Whether to run training.")
-    parser.add_argument("--do_eval", action="store_true", help="Whether to run eval on the dev set.")
-    parser.add_argument("--do_predict", action="store_true", help="Whether to do prediction.")
+    parser.add_argument("--do_train", default=True, help="Whether to run training.")
+    parser.add_argument("--do_eval", default=True, help="Whether to run eval on the dev set.")
+    parser.add_argument("--do_predict", default=False, help="Whether to do prediction.")
     parser.add_argument(
-        "--evaluate_during_training", action="store_true", help="Run evaluation during training at each logging step."
+        "--evaluate_during_training", default=True, help="Run evaluation during training at each logging step."
     )
     parser.add_argument(
-        "--do_lower_case", action="store_true", help="Set this flag if you are using an uncased model."
+        "--do_lower_case", default=True, help="Set this flag if you are using an uncased model."
     )
 
-    parser.add_argument("--per_gpu_train_batch_size", default=8, type=int, help="Batch size per GPU/CPU for training.")
+    parser.add_argument("--per_gpu_train_batch_size", default=1, type=int, help="Batch size per GPU/CPU for training.")
     parser.add_argument(
-        "--per_gpu_eval_batch_size", default=8, type=int, help="Batch size per GPU/CPU for evaluation."
+        "--per_gpu_eval_batch_size", default=1, type=int, help="Batch size per GPU/CPU for evaluation."
     )
     parser.add_argument("--learning_rate", default=5e-5, type=float, help="The initial learning rate for Adam.")
     parser.add_argument(
         "--gradient_accumulation_steps",
         type=int,
-        default=1,
+        default=2,
         help="Number of updates steps to accumulate before performing a backward/update pass.",
     )
     parser.add_argument("--weight_decay", default=0.0, type=float, help="Weight decay if we apply some.")
     parser.add_argument("--adam_epsilon", default=1e-8, type=float, help="Epsilon for Adam optimizer.")
     parser.add_argument("--max_grad_norm", default=1.0, type=float, help="Max gradient norm.")
     parser.add_argument(
-        "--num_train_epochs", default=3.0, type=float, help="Total number of training epochs to perform."
+        "--num_train_epochs", default=1000, type=float, help="Total number of training epochs to perform."
     )
     parser.add_argument(
         "--max_steps",
@@ -151,9 +161,9 @@ def register_args(parser):
         "A number of warnings are expected for a normal SQuAD evaluation.",
     )
 
-    parser.add_argument("--logging_steps", type=int, default=500, help="Log every X updates steps.")
-    parser.add_argument("--eval_steps", type=int, default=500, help="Eval every X updates steps.")
-    parser.add_argument("--save_steps", type=int, default=500, help="Save checkpoint every X updates steps.")
+    parser.add_argument("--logging_steps", type=int, default=10000, help="Log every X updates steps.")
+    parser.add_argument("--eval_steps", type=int, default=8000, help="Eval every X updates steps.")
+    parser.add_argument("--save_steps", type=int, default=1000, help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--eval_all_checkpoints",
         action="store_true",
@@ -165,7 +175,7 @@ def register_args(parser):
     parser.add_argument("--num_contrast_sample", type=int, default=20, help="number of samples in a batch.")
     parser.add_argument("--no_cuda", action="store_true", help="Whether not to use CUDA when available")
     parser.add_argument(
-        "--overwrite_output_dir", action="store_true", help="Overwrite the content of the output directory"
+        "--overwrite_output_dir", default=True, help="Overwrite the content of the output directory"
     )
     parser.add_argument(
         "--overwrite_cache", action="store_true", help="Overwrite the cached training and evaluation sets"
@@ -202,25 +212,31 @@ def validate_args(args):
         args.bootstrapping_update_epochs = bootstrapping_update_epochs
 
 def load_untrained_model(args):
+    MODEL=args.train_file.split('/')[2]
     args.model_type = args.model_type.lower()
-    config = AutoConfig.from_pretrained(
-        args.config_name if args.config_name else args.model_name_or_path,
-        cache_dir=args.cache_dir if args.cache_dir else None,
-    )
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
-        do_lower_case=args.do_lower_case,
-        cache_dir=args.cache_dir if args.cache_dir else None,
-    )
-    model_class = MODEL_TYPE_DICT[args.model_type]
-    model = model_class.from_pretrained(
-        args.model_name_or_path,
-        from_tf=bool(".ckpt" in args.model_name_or_path),
-        config=config,
-        cache_dir=args.cache_dir if args.cache_dir else None,
-    )
+    
+    if MODEL!='KEPLER':
+        config = AutoConfig.from_pretrained('../pretrain/'+MODEL)
+        tokenizer = AutoTokenizer.from_pretrained('../pretrain/'+MODEL)
+    else:
+        config=RobertaConfig.from_pretrained(args.model_name_or_path)
+        tokenizer=RobertaTokenizer.from_pretrained(args.model_name_or_path)
+        model=KEPLERRanking('../pretrain/'+MODEL,config)
+        
+    if args.model_type=='distilbert':
+        model=DistilbertRanking('../pretrain/'+MODEL,config)
+    if args.model_type=='xlnet':
+        model=XlnetRanking('../pretrain/'+MODEL,config)
+    if args.model_type=='gpt2':
+        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.sep_token=tokenizer.eos_token
+        model=GPT2Ranking('../pretrain/'+MODEL,config)
+    
+    if args.model_type not in ['distilbert','xlnet','gpt2'] and MODEL!='KEPLER':
+        model=CandidateRanking('../pretrain/'+MODEL,config)
+    #     model = BertForCandidateRanking.from_pretrained(
+    #     '../pretrain/'+MODEL,
+    #     config=config,
+    # )
 
     return config, tokenizer, model
-
-def get_model_class(args):
-    return MODEL_TYPE_DICT[args.model_type]
