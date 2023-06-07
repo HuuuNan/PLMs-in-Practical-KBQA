@@ -9,8 +9,8 @@ from mylogger import mylog
 file_name = os.path.basename(__file__)
 file_name = file_name[0:len(file_name) - 3]
 
-MODEL = 'xlnet-base-cased'
-SCALE = 'medium1'
+MODEL = 'bert-base-uncased'
+SCALE = 'small'
 
 # set logger
 my_logger = mylog.log_creater('./log', file_name + '_' + MODEL + '_' + SCALE + '-out')

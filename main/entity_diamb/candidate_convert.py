@@ -1,8 +1,8 @@
 import json
 import os
 
-MODEL='gpt2'
-SCALE='large'
+MODEL='bert-base-uncased'
+SCALE='small'
 
 os.makedirs('data/'+SCALE+'/'+MODEL, exist_ok=True)
 

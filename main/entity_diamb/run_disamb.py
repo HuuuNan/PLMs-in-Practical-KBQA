@@ -1,7 +1,5 @@
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 import argparse
 import glob
 import logging
@@ -48,7 +46,7 @@ except ImportError:
 
 from components.config import set_seed, to_list, register_args, validate_args, load_untrained_model
 from components.dataset_utils import ListDataset
-from components.disamb_dataset_hn import (
+from components.disamb_dataset import (
     read_disamb_instances_from_entity_candidates,
     extract_disamb_features_from_examples,
     disamb_collate_fn,
@@ -95,14 +93,6 @@ def train(args, train_dataset, model, tokenizer, redict):
         num_warmup_steps=int(max(args.warmup_steps, t_total * args.warmup_ratio)),
         num_training_steps=t_total
     )
-
-    # Check if saved optimizer or scheduler states exist
-    if os.path.isfile(os.path.join(args.model_name_or_path, "optimizer.pt")) and os.path.isfile(
-            os.path.join(args.model_name_or_path, "scheduler.pt")
-    ):
-        # Load in optimizer and scheduler states
-        optimizer.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "optimizer.pt")))
-        scheduler.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "scheduler.pt")))
 
     # multi-gpu training
     if args.n_gpu > 1:
@@ -200,7 +190,7 @@ def train(args, train_dataset, model, tokenizer, redict):
                     tb_writer.add_scalar("loss", (tr_loss - logging_loss) / args.logging_steps, global_step)
                     logger.info("Training logs: {}".format(logs))
                     logging_loss = tr_loss
-
+            
             if (step + 1) % args.eval_steps == 0:
                 results, valid_time = evaluate(args, model, tokenizer, redict)
                 for key, value in results.items():
@@ -227,13 +217,11 @@ def train(args, train_dataset, model, tokenizer, redict):
                 else:
                     patience += 1
                     if patience > args.patience:
-                        time2 = time.time()
-                        train_time = time2 - time1
                         logger.info('Patience of {} Steps Reach. Stop Training'.format(str(args.patience)))
                         break
                     else:
                         logger.info('No Improvement. Current Patience Step {}'.format(patience))
-
+        '''
         if args.evaluate_during_training:
             results,valid_time = evaluate(args, model, tokenizer, redict)
             for key, value in results.items():
@@ -266,8 +254,8 @@ def train(args, train_dataset, model, tokenizer, redict):
                     break
                 else:
                     logger.info('No Improvement. Current Patience Step {}'.format(patience))
-
-        train_time = time.time() - time1
+        '''
+    train_time = time.time() - time1
     if args.local_rank in [-1, 0]:
         tb_writer.close()
     train_time = train_time - save_cost
@@ -449,16 +437,15 @@ def load_and_cache_examples(args, tokenizer, redict, stage, output_examples=Fals
 
 
 def main():
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     parser = argparse.ArgumentParser()
     register_args(parser)
     args = parser.parse_args()
     # choose which gpu to use, -1 for cpu
 
-    # SCALE = 'medium1'
+    SCALE = 'small'
     TYPE = 'bert'
-    # MODEL = 'bert-base-uncased'
-    MODEL = 'xlnet-base-cased'
-    SCALE = 'large'
+    MODEL ='bert-base-uncased'
 
     ###
     # if TYPE in ['xlnet','roberta']: 
@@ -477,7 +464,6 @@ def main():
     os.makedirs(args.checkpoint_dir + '/' + SCALE + '/' + MODEL, exist_ok=True)
 
     args.model_type = TYPE
-    args.model_name_or_path = '../pretrain/' + MODEL
 
     args.train_file = 'data/' + SCALE + '/' + MODEL + '/train_candidate.json'
     args.predict_file = 'data/' + SCALE + '/' + MODEL + '/valid_candidate.json'
@@ -490,13 +476,13 @@ def main():
         redict = pickle.load(open('indexes/connect_relation_medium1.pkl', 'rb'))
     if SCALE == 'medium2':
         redict = pickle.load(open('indexes/connect_relation_medium2.pkl', 'rb'))
-
+    
     # delete tokenize cache to calculate tokenize time
     if os.path.exists('feature_cache/' + SCALE + '/' + MODEL):
         temppath = os.listdir('feature_cache/' + SCALE + '/' + MODEL)
         for i in temppath:
             os.remove('feature_cache/' + SCALE + '/' + MODEL + '/' + i)
-
+    
     device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu = 1
@@ -538,8 +524,8 @@ def main():
     # Evaluation - we can ask to evaluate all the checkpoints (sub-directories) in a directory
     results = {}
     if args.do_eval and args.local_rank in [-1, 0]:
-        logger.warning("Loading checkpoint %s for evaluation", args.model_name_or_path)
         checkpoint = args.checkpoint_dir + '/' + SCALE + '/' + MODEL
+        logger.warning("Loading checkpoint %s for evaluation", checkpoint)
         logger.warning("Evaluate the following checkpoint: %s", checkpoint)
         tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         model.load_state_dict(torch.load(checkpoint + '/pytorch_model.bin', map_location=args.device))

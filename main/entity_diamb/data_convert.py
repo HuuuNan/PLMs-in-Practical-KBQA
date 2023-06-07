@@ -1,9 +1,11 @@
 import pandas as pd
 import json
+import os
 
-train_csv=pd.read_table('data/train.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])
-valid_csv=pd.read_table('data/valid.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])
-test_csv=pd.read_table('data/test.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])
+os.makedirs('data', exist_ok=True)
+train_csv=pd.read_table('../mydata/train.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])
+valid_csv=pd.read_table('../mydata/valid.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])
+test_csv=pd.read_table('../mydata/test.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])
 
 def convert(csvfile,jsonfile):
     datalist=[]
