@@ -74,10 +74,12 @@ MODEL= PLM CACHE NAME, e.g. bert-base-uncased  # names in FOLDER PLMs-in-Practic
 ### Classification-based KGQA Framework
 If you want to implement KGQA_CL framework, please follow these steps.
 #### 1. Entity detection
+Go to ```PLMs-in-Practical-KBQA/main/entity_detection/```:
 (1) Run ```data_convert.py``` to generate training data for entity detection  
 (2) Run ```ner_label.py``` to generating labels for similarity-based relation prediction  
 (3) For GPT2, run ```train.py``` in entity_detection folder to train ner; for other models, run ```ner.py```
 #### 2. Entity linking
+Go to ```PLMs-in-Practical-KBQA/main/entity_detection/```:
 (1) Run ```entity_linking.py``` to generate candidate entities  
 (2) Run ```data_convert.py``` to convert the form of original dataset  
 (3) Run ```candidate_convert.py``` to preprocess the output of entity_linking.py  
