@@ -87,6 +87,10 @@ model_args.use_early_stopping=True
 model_args.early_stopping_consider_epochs=True
 model_args.early_stopping_patience=10
 model_args.best_model_dir=SCALE+'/'+MODEL+'_output/best_model/'
+model_args.use_multiprocessing = False
+model_args.dataloader_num_workers = 0
+model_args.process_count = 1
+model_args.use_multiprocessing_for_evaluation = False
 
 # Create a MultiLabelClassificationModel
 model = ClassificationModel(
