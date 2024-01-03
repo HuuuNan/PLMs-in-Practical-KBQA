@@ -1,9 +1,10 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 import pandas as pd
 import random
 from simpletransformers.classification import ClassificationModel, ClassificationArgs
 import logging
 import numpy as np
-import os
 import time
 import psutil
 from torchtext import data
@@ -11,31 +12,34 @@ import torch.nn.functional as F
 import torch
 import pickle
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
-TYPE='albert'
-MODEL="albert-base-v2"
-SCALE='large'
+TYPE='bert'
+MODEL="bert-base-uncased"
+SCALE='small'
+
+os.makedirs(SCALE+'/'+MODEL+'_output', exist_ok=True)
+os.makedirs(SCALE+'/'+MODEL+'_results', exist_ok=True)
 
 train=pd.read_table('../mydata/train.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])   
 valid=pd.read_table('../mydata/valid.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])   
 test=pd.read_table('../mydata/test.txt', header=None, names=["lineid", "entity_mid", "entity_name", "relation", "object", "question", "tags"])
 
-if SCALE=='small':
-    redict=pickle.load(open('../indexes/reachability_2M.pkl','rb'))
-else:
-    redict=pickle.load(open('../indexes/redict.pkl','rb'))
-pre_start=time.time()
-exist=set()
-for i in redict.items():
-    for j in i[1]:
-        exist.add(j)
-exist=list(exist)
-
+# prepare all relations
+exist=[]
+with open('relation_'+SCALE+'.txt','r',encoding='utf-8') as f:
+    line=f.readline()
+    while line!='':
+        exist.append(line.strip())
+        line=f.readline()
+        
 tag=[]
 for i in train['relation']:
-    if i[3:] in exist:
-        num=exist.index(i[3:])
-        tag.append(num)
+    # deal with relation start with fb: in small scale
+    if SCALE!='small':
+        temp=i[3:]
+    else:
+        temp=i
+    if temp in exist:
+        tag.append(exist.index(temp))
     else:
         tag.append(len(exist))
         
@@ -43,23 +47,32 @@ train_df=pd.DataFrame()
 train_df['text']=train['question']
 train_df['labels']=tag
 print(train_df)
+
 tag=[]
 for i in valid['relation']:
-    if i[3:] in exist:
-        num=exist.index(i[3:])
-        tag.append(num)
+    # deal with relation start with fb: in small scale
+    if SCALE!='small':
+        temp=i[3:]
+    else:
+        temp=i
+    if temp in exist:
+        tag.append(exist.index(temp))
     else:
         tag.append(len(exist))
-
+        
 valid_df=pd.DataFrame()
 valid_df['text']=valid['question']
 valid_df['labels']=tag
         
 tag=[]
 for i in test['relation']:
-    if i[3:] in exist:
-        num=exist.index(i[3:])
-        tag.append(num)
+    # deal with relation start with fb: in small scale
+    if SCALE!='small':
+        temp=i[3:]
+    else:
+        temp=i
+    if temp in exist:
+        tag.append(exist.index(temp))
     else:
         tag.append(len(exist))
     
@@ -87,6 +100,7 @@ model_args.use_early_stopping=True
 model_args.early_stopping_consider_epochs=True
 model_args.early_stopping_patience=10
 model_args.best_model_dir=SCALE+'/'+MODEL+'_output/best_model/'
+model_args.evaluate_during_training_steps=-1
 model_args.use_multiprocessing = False
 model_args.dataloader_num_workers = 0
 model_args.process_count = 1
@@ -94,7 +108,7 @@ model_args.use_multiprocessing_for_evaluation = False
 
 # Create a MultiLabelClassificationModel
 model = ClassificationModel(
-    TYPE, '../pretrain/'+MODEL, num_labels=len(exist),use_cuda=True,args=model_args
+    TYPE, '../../../pretrain/'+MODEL, num_labels=len(exist)+1,use_cuda=True,args=model_args
 )
 
 if not os.path.exists(SCALE+'/'+MODEL+'_results'):
