@@ -80,8 +80,9 @@ Go to ```PLMs-in-Practical-KBQA/main/entity_detection/```:
 (3) For GPT2, run ```train.py``` in entity_detection folder to train ner; for other models, run ```ner.py```
 #### 2. Entity linking
 Go to ```PLMs-in-Practical-KBQA/main/entity_linking/```:  
-(1) Run ```entity_linking.py``` to generate candidate entities
-Go to ```PLMs-in-Practical-KBQA/main/entity_disamb/```:(optional, you can skip this process and use entity_linking result directly)  
+(1) Run ```entity_linking.py``` to generate candidate entities  
+Go to ```PLMs-in-Practical-KBQA/main/entity_disamb/```:
+Note: optional, you can skip this process and use entity_linking result directly, but the results may be lower. 
 (2) Run ```data_convert.py``` to convert the form of original dataset  
 (3) Run ```candidate_convert.py``` to preprocess the output of entity_linking.py  
 (4) Run ```run_disamb.py``` to train and inference entity disambiguation  
@@ -92,7 +93,8 @@ Go to ```PLMs-in-Practical-KBQA/main/rel_prediction/```:
 (2) Run ```test_re.py``` to test  
 #### 4. Evidence integration
 Go to ```PLMs-in-Practical-KBQA/main/evidence_integration/```:  
-Run ```final.py``` to evaluate the result. Modify the TYPE(valid/test), MODEL(model name), SCALE(small, medium1, medium2, large) and DISAMB(True/False) according to your situation.
+Run ```final.py``` to evaluate the result. 
+Note: Modify the TYPE(valid/test), MODEL(model name), SCALE(small, medium1, medium2, large) and DISAMB(True/False) according to your situation. If you want to use entity linking results after disamb, set DISAMB True. Otherwise, set DISAMB False.  
 ### Retrieval and Ranking-based KGQA Framework
 If you want to implement KGQA_RR framework, please follow these steps.
 #### 1. Entity detection
